@@ -1,8 +1,9 @@
 {
   "name": "aws-cloudformation-deploy",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Easier way to deploy AWS CloudFormation stacks in Node.js",
-  "main": "./dist/index.js",
+  "main": "./dist/index",
+  "typings": "dist/index",
   "scripts": {
     "build": "tsc -p ./tsconfig.json"
   },

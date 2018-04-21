@@ -25,10 +25,17 @@ const oraPromise = (message, promise) => {
         throw _;
     });
 };
-exports.AwsCloudFormationDeploy = ({ stackName, templateBody, policyBody, params }) => {
+exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationProtection = true, policyBody, params }) => {
+    const setTerminationProtection = () => __awaiter(this, void 0, void 0, function* () {
+        yield oraPromise(`${enableTerminationProtection ? 'Enable' : 'Disable'} Termination Protection...`, lib_1.updateTerminationProtection({
+            stackName,
+            enableTerminationProtection
+        }));
+    });
     const start = () => __awaiter(this, void 0, void 0, function* () {
         const cfn = new AWS.CloudFormation();
-        const stackStatus = yield lib_1.getStackStatus(stackName);
+        const stack = (yield lib_1.getStack(stackName));
+        const stackStatus = stack ? stack.StackStatus : 'UNAVAILABLE';
         let changeSetType;
         switch (stackStatus) {
             case 'CREATE_COMPLETE':
@@ -58,14 +65,23 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, policyBody, params
             type: changeSetType,
             name: stackName,
             params: stackParams
+        }))
+            .catch((_) => __awaiter(this, void 0, void 0, function* () {
+            if (stack && stack.EnableTerminationProtection !== enableTerminationProtection) {
+                yield setTerminationProtection();
+            }
+            throw _;
         }));
-        const executeFn = () => {
-            return oraPromise('Deploying CloudFormation Template...', lib_1.executeChangeSet({
+        const executeFn = () => __awaiter(this, void 0, void 0, function* () {
+            yield oraPromise('Deploying CloudFormation Template...', lib_1.executeChangeSet({
                 stackName,
                 changeSetId: changeSet.ChangeSetId,
                 changeSetType
             }));
-        };
+            if (changeSetType === 'CREATE') {
+                yield setTerminationProtection();
+            }
+        });
         if (changeSet.Changes.length > 0) {
             console.log(lib_1.createTableFromChangeSet(changeSet));
             if (yield lib_1.promptChangesConfirmation()) {

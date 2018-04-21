@@ -8,14 +8,16 @@ import {
   deleteChangeSet,
   deleteStack,
   executeChangeSet,
-  getStackStatus,
-  createTableFromChangeSet
+  getStack,
+  createTableFromChangeSet,
+  updateTerminationProtection
 } from './lib';
 import { CloudFormation } from 'aws-sdk';
 
 type DeployOptions = {
   stackName: AWS.CloudFormation.StackName,
   templateBody: AWS.CloudFormation.TemplateBody,
+  enableTerminationProtection?: AWS.CloudFormation.EnableTerminationProtection,
   policyBody?: AWS.CloudFormation.StackPolicyBody,
   params?: {[key: string]: string}
 }
@@ -38,13 +40,25 @@ const oraPromise = (message:string, promise:Promise<any>) => {
 
 export const AwsCloudFormationDeploy = ({ 
   stackName, 
-  templateBody, 
+  templateBody,
+  enableTerminationProtection = true, 
   policyBody, 
   params 
 }: DeployOptions) => {
+  const setTerminationProtection = async () => {
+    await (oraPromise(
+      `${enableTerminationProtection ? 'Enable' : 'Disable'} Termination Protection...`,
+      updateTerminationProtection({
+        stackName,
+        enableTerminationProtection
+      })
+    ) as ReturnType<typeof updateTerminationProtection>);  
+  }
+
   const start = async () => {
     const cfn = new AWS.CloudFormation();
-    const stackStatus = await getStackStatus(stackName);
+    const stack = (await getStack(stackName));
+    const stackStatus = stack ? stack.StackStatus : 'UNAVAILABLE';
     let changeSetType: AWS.CloudFormation.ChangeSetType;
 
     switch(stackStatus){
@@ -84,11 +98,19 @@ export const AwsCloudFormationDeploy = ({
         name: stackName,
         params: stackParams
       })
-    ) as ReturnType<typeof createChangeSet>);
+    ) as ReturnType<typeof createChangeSet>)
+    .catch(async _ => {
+      // Update Termination Protection when needed
+      if(stack && stack.EnableTerminationProtection !== enableTerminationProtection) {
+        await setTerminationProtection();
+      }
+
+      throw _;
+    });
 
     // Function to execute change set
-    const executeFn = () => {
-      return oraPromise(
+    const executeFn = async () => {
+      await oraPromise(
         'Deploying CloudFormation Template...',
         executeChangeSet({
           stackName,
@@ -96,6 +118,11 @@ export const AwsCloudFormationDeploy = ({
           changeSetType
         })
       ) as ReturnType<typeof executeChangeSet>
+      
+      // Set Termination Protection
+      if(changeSetType === 'CREATE'){
+        await setTerminationProtection();
+      }
     };
     
     // Show table of changes and ask for confirmation of the change

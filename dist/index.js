@@ -40,6 +40,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
         switch (stackStatus) {
             case 'CREATE_COMPLETE':
             case 'UPDATE_COMPLETE':
+            case 'UPDATE_ROLLBACK_COMPLETE':
                 changeSetType = 'UPDATE';
                 break;
             case 'UNAVAILABLE':

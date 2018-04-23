@@ -1,5 +1,5 @@
 {
-  "name": "aws-cloudformation-deploy",
+  "name": "@erwinverdonk/aws-cloudformation-deploy",
   "version": "1.0.4",
   "description": "Easier way to deploy AWS CloudFormation stacks in Node.js",
   "main": "./dist/index",

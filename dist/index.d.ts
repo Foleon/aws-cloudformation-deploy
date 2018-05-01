@@ -1,3 +1,4 @@
+import { CloudFormation } from 'aws-sdk';
 export declare const AwsCloudFormationDeploy: ({ stackName, templateBody, enableTerminationProtection, policyBody, params }: {
     stackName: string;
     templateBody: string;
@@ -7,5 +8,8 @@ export declare const AwsCloudFormationDeploy: ({ stackName, templateBody, enable
         [key: string]: string;
     };
 }) => {
-    start: () => Promise<void>;
+    start: () => Promise<{
+        outputs: CloudFormation.Output[];
+        succeed: boolean;
+    }>;
 };

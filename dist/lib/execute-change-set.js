@@ -1,25 +1,22 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const AWS = require("aws-sdk");
-exports.executeChangeSet = ({ stackName, changeSetId, changeSetType }) => __awaiter(this, void 0, void 0, function* () {
+exports.executeChangeSet = ({ stackName, changeSetId, changeSetType }) => {
     const cfn = new AWS.CloudFormation();
     const waitForStatus = changeSetType === 'CREATE'
         ? 'stackCreateComplete'
         : 'stackUpdateComplete';
-    yield cfn.executeChangeSet({
+    return cfn.executeChangeSet({
         StackName: stackName,
         ChangeSetName: changeSetId
     })
         .promise()
         .then(_ => cfn.waitFor(waitForStatus, {
         StackName: stackName
-    }).promise());
-});
+    })
+        .promise()
+        .then(_ => _.Stacks[0])
+        .then(_ => ({
+        outputs: _.Outputs
+    })));
+};

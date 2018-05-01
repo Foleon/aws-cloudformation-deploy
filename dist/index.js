@@ -74,22 +74,28 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
             throw _;
         }));
         const executeFn = () => __awaiter(this, void 0, void 0, function* () {
-            yield oraPromise('Deploying CloudFormation Template...', lib_1.executeChangeSet({
+            return oraPromise('Deploying CloudFormation Template...', lib_1.executeChangeSet({
                 stackName,
                 changeSetId: changeSet.ChangeSetId,
                 changeSetType
+            }))
+                .then((_) => __awaiter(this, void 0, void 0, function* () {
+                if (changeSetType === 'CREATE') {
+                    yield setTerminationProtection();
+                }
+                return {
+                    outputs: _.outputs,
+                    succeed: true
+                };
             }));
-            if (changeSetType === 'CREATE') {
-                yield setTerminationProtection();
-            }
         });
         if (changeSet.Changes.length > 0) {
             console.log(lib_1.createTableFromChangeSet(changeSet));
             if (yield lib_1.promptChangesConfirmation()) {
-                yield executeFn();
+                return executeFn();
             }
             else {
-                yield oraPromise('Deleting CloudFormation Change Set...', (() => {
+                const result = yield oraPromise('Deleting CloudFormation Change Set...', (() => {
                     if (changeSetType === 'CREATE') {
                         return lib_1.deleteStack({
                             stackName
@@ -100,12 +106,16 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
                             changeSetName: changeSet.ChangeSetId
                         });
                     }
-                })());
+                })()).then(_ => ({
+                    succeed: false,
+                    outputs: []
+                }));
                 console.log(chalk_1.default.yellow('Deployment of CloudFormation template canceled'));
+                return result;
             }
         }
         else {
-            yield executeFn();
+            return executeFn();
         }
     });
     return {

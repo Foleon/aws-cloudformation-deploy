@@ -6,7 +6,7 @@ type ExecuteOptions = {
   changeSetType: AWS.CloudFormation.ChangeSetType
 };
 
-export const executeChangeSet = async ({
+export const executeChangeSet = ({
   stackName, 
   changeSetId,
   changeSetType
@@ -16,12 +16,18 @@ export const executeChangeSet = async ({
     ? 'stackCreateComplete'
     : 'stackUpdateComplete'
 
-  await cfn.executeChangeSet({
+  return cfn.executeChangeSet({
     StackName: stackName,
     ChangeSetName: changeSetId
   })
   .promise()
   .then(_ => cfn.waitFor(waitForStatus as any, {
-    StackName: stackName
-  }).promise());
+     StackName: stackName
+    })
+    .promise()
+    .then(_ => _.Stacks[0])
+    .then(_ => ({
+      outputs: _.Outputs
+    }))
+  )
 }

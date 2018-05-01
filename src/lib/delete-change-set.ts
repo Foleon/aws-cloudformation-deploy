@@ -9,5 +9,6 @@ export const deleteChangeSet = ({ changeSetName }: DeleteOptons ) => {
   return cfn.deleteChangeSet({
     ChangeSetName: changeSetName
   })
-  .promise();
+  .promise()
+  .then(_ => ({}));
 };

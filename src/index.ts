@@ -111,19 +111,25 @@ export const AwsCloudFormationDeploy = ({
 
     // Function to execute change set
     const executeFn = async () => {
-      await oraPromise(
+      return (oraPromise(
         'Deploying CloudFormation Template...',
         executeChangeSet({
           stackName,
           changeSetId: changeSet.ChangeSetId,
           changeSetType
         })
-      ) as ReturnType<typeof executeChangeSet>
-      
-      // Set Termination Protection
-      if(changeSetType === 'CREATE'){
-        await setTerminationProtection();
-      }
+      ) as ReturnType<typeof executeChangeSet>)
+      .then(async _ => {
+        // Set Termination Protection
+        if(changeSetType === 'CREATE'){
+          await setTerminationProtection();
+        }
+
+        return {
+          outputs: _.outputs,
+          succeed: true
+        };
+      })
     };
     
     // Show table of changes and ask for confirmation of the change
@@ -131,11 +137,11 @@ export const AwsCloudFormationDeploy = ({
       console.log(createTableFromChangeSet(changeSet));
       
       if(await promptChangesConfirmation()){
-        await executeFn();
+        return executeFn();
       } else {
         // Delete either the new to be create stack or the change 
         // set of a current stack.
-        await oraPromise(
+        const result = await oraPromise(
           'Deleting CloudFormation Change Set...',
           (() => {
             if(changeSetType === 'CREATE'){
@@ -148,14 +154,19 @@ export const AwsCloudFormationDeploy = ({
               })
             }
           })()
-        )
+        ).then(_ => ({
+          succeed: false,
+          outputs: [] as AWS.CloudFormation.Outputs
+        }))
 
         console.log(
           chalk.yellow('Deployment of CloudFormation template canceled')
-        )
+        );
+
+        return result;
       }
     } else {
-      await executeFn();
+      return executeFn();
     }
   }
   

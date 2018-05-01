@@ -9,5 +9,7 @@ exports.deleteStack = ({ stackName }) => {
         .promise()
         .then(_ => cfn.waitFor('stackDeleteComplete', {
         StackName: stackName
-    }).promise());
+    })
+        .promise()
+        .then(_ => ({})));
 };

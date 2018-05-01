@@ -12,6 +12,9 @@ export const deleteStack = ({ stackName }: DeleteOptions) => {
   })
   .promise()
   .then(_ => cfn.waitFor('stackDeleteComplete', {
-    StackName: stackName
-  }).promise());
+      StackName: stackName
+    })
+    .promise()
+    .then(_ => ({}))
+  );
 };

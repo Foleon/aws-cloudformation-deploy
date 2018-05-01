@@ -6,5 +6,6 @@ exports.deleteChangeSet = ({ changeSetName }) => {
     return cfn.deleteChangeSet({
         ChangeSetName: changeSetName
     })
-        .promise();
+        .promise()
+        .then(_ => ({}));
 };

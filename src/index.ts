@@ -56,6 +56,8 @@ export const AwsCloudFormationDeploy = ({
   }
 
   const start = async () => {
+    AWS.config.update(new AWS.Config());
+
     const cfn = new AWS.CloudFormation();
     const stack = (await getStack(stackName));
     const stackStatus = stack ? stack.StackStatus : 'UNAVAILABLE';

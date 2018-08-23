@@ -33,6 +33,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
         }));
     });
     const start = () => __awaiter(this, void 0, void 0, function* () {
+        AWS.config.update(new AWS.Config());
         const cfn = new AWS.CloudFormation();
         const stack = (yield lib_1.getStack(stackName));
         const stackStatus = stack ? stack.StackStatus : 'UNAVAILABLE';

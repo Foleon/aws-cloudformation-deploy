@@ -55,7 +55,7 @@ export const AwsCloudFormationDeploy = ({
     ) as ReturnType<typeof updateTerminationProtection>);  
   }
 
-  const start = async () => {
+  const start = async ({ assumeYes }: { assumeYes: boolean }) => {
     AWS.config.update(new AWS.Config());
 
     const cfn = new AWS.CloudFormation();
@@ -138,7 +138,7 @@ export const AwsCloudFormationDeploy = ({
     if(changeSet.Changes.length > 0){
       console.log(createTableFromChangeSet(changeSet));
       
-      if(await promptChangesConfirmation()){
+      if(assumeYes || await promptChangesConfirmation()){
         return executeFn();
       } else {
         // Delete either the new to be create stack or the change 

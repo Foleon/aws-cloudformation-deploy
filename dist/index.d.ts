@@ -8,7 +8,9 @@ export declare const AwsCloudFormationDeploy: ({ stackName, templateBody, enable
         [key: string]: string;
     };
 }) => {
-    start: () => Promise<{
+    start: ({ assumeYes }: {
+        assumeYes: boolean;
+    }) => Promise<{
         outputs: CloudFormation.Output[];
         succeed: boolean;
     }>;

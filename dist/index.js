@@ -32,7 +32,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
             enableTerminationProtection
         }));
     });
-    const start = () => __awaiter(this, void 0, void 0, function* () {
+    const start = ({ assumeYes }) => __awaiter(this, void 0, void 0, function* () {
         AWS.config.update(new AWS.Config());
         const cfn = new AWS.CloudFormation();
         const stack = (yield lib_1.getStack(stackName));
@@ -92,7 +92,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
         });
         if (changeSet.Changes.length > 0) {
             console.log(lib_1.createTableFromChangeSet(changeSet));
-            if (yield lib_1.promptChangesConfirmation()) {
+            if (assumeYes || (yield lib_1.promptChangesConfirmation())) {
                 return executeFn();
             }
             else {

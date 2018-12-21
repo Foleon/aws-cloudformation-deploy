@@ -12,6 +12,9 @@ const AWS = require("aws-sdk");
 const ora = require("ora");
 const chalk_1 = require("chalk");
 const lib_1 = require("./lib");
+const uuid = (_) => _
+    ? (_ ^ ((Math.random() * 16) >> (_ / 4))).toString(16)
+    : ('' + 1e7 + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid);
 const oraPromise = (message, promise) => {
     const indicator = ora(message);
     indicator.start();
@@ -32,9 +35,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
             enableTerminationProtection
         }));
     });
-    const start = ({ assumeYes }) => __awaiter(this, void 0, void 0, function* () {
-        AWS.config.update(new AWS.Config());
-        const cfn = new AWS.CloudFormation();
+    const deployTemplate = (location, assumeYes = false) => __awaiter(this, void 0, void 0, function* () {
         const stack = (yield lib_1.getStack(stackName));
         const stackStatus = stack ? stack.StackStatus : 'UNAVAILABLE';
         let changeSetType;
@@ -59,7 +60,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
         }), []);
         const stackParams = {
             StackName: stackName,
-            TemplateBody: templateBody,
+            TemplateURL: location,
             Parameters: parsedParams,
             Capabilities: ['CAPABILITY_NAMED_IAM']
         };
@@ -118,6 +119,30 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
         else {
             return executeFn();
         }
+    });
+    const start = ({ assumeYes } = {}) => __awaiter(this, void 0, void 0, function* () {
+        AWS.config.update(new AWS.Config());
+        const bucketName = uuid();
+        const keyName = uuid();
+        const s3 = new AWS.S3();
+        s3.createBucket({
+            Bucket: bucketName
+        }).promise()
+            .then(() => s3.upload({
+            Bucket: bucketName,
+            Key: keyName,
+            Body: templateBody,
+        }).promise())
+            .then(template => deployTemplate(template.Location, assumeYes))
+            .catch(() => undefined)
+            .then(() => s3.deleteObject({
+            Bucket: bucketName,
+            Key: keyName,
+        }).promise())
+            .catch(() => undefined)
+            .then(() => s3.deleteBucket({
+            Bucket: bucketName
+        }).promise());
     });
     return {
         start

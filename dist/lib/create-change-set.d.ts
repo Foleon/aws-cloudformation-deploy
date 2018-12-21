@@ -4,7 +4,7 @@ export declare const createChangeSet: ({ type, name, params }: {
     name: string;
     params: {
         StackName: string;
-        TemplateBody: string;
+        TemplateURL: string;
         Parameters: AWS.CloudFormation.Parameter[];
         Capabilities: string[];
     };

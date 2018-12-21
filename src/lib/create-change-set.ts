@@ -5,7 +5,7 @@ type CreateOptions = {
   name: AWS.CloudFormation.ChangeSetName, 
   params:{
     StackName: AWS.CloudFormation.StackName,
-    TemplateBody: AWS.CloudFormation.TemplateBody,
+    TemplateURL: AWS.CloudFormation.TemplateURL,
     Parameters: AWS.CloudFormation.Parameters,
     Capabilities: AWS.CloudFormation.Capabilities
   }

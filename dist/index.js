@@ -123,28 +123,26 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
     const start = ({ assumeYes } = {}) => __awaiter(this, void 0, void 0, function* () {
         AWS.config.update(new AWS.Config());
         const s3 = new AWS.S3();
-        const bucketName = uuid();
-        const keyName = uuid();
-        yield s3.createBucket({
+        const sts = new AWS.STS();
+        const accountId = (yield sts.getCallerIdentity().promise()).Account;
+        const bucketName = `aws-cloudformation-deploy-${accountId}-${AWS.config.region}`;
+        const keyName = `${uuid().replace(/-/g, '')}-${stackName}`;
+        yield s3.headBucket({
             Bucket: bucketName
-        }).promise();
+        }).promise().catch(e => {
+            if (e.statusCode === 404) {
+                return s3.createBucket({
+                    Bucket: bucketName
+                }).promise();
+            }
+            throw e;
+        });
         const template = yield s3.upload({
             Bucket: bucketName,
             Key: keyName,
             Body: templateBody,
         }).promise();
-        const deployResult = yield deployTemplate(template.Location, assumeYes);
-        yield s3
-            .deleteObject({
-            Bucket: bucketName,
-            Key: keyName,
-        })
-            .promise()
-            .catch(() => undefined)
-            .then(() => s3.deleteBucket({
-            Bucket: bucketName
-        })
-            .promise());
+        const deployResult = yield deployTemplate(template.Location, assumeYes).catch(e => console.error(e));
         return deployResult;
     });
     return {

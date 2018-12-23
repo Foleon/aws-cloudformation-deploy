@@ -178,35 +178,31 @@ export const AwsCloudFormationDeploy = ({
     AWS.config.update(new AWS.Config());
 
     const s3 = new AWS.S3();
-    const bucketName = uuid();
-    const keyName = uuid();
+    const sts = new AWS.STS();
+    const accountId = (await sts.getCallerIdentity().promise()).Account;
+    const bucketName = `aws-cloudformation-deploy-${accountId}-${AWS.config.region}`;
+    const keyName = `${uuid().replace(/-/g, '')}-${stackName}`;
 
-    await s3.createBucket({
+    await s3.headBucket({
       Bucket: bucketName
-    }).promise();
-    
+    }).promise().catch(e => {
+      if (e.statusCode === 404) {
+        return s3.createBucket({
+          Bucket: bucketName
+        }).promise();
+      }
+
+      throw e;
+    });
+
     const template = await s3.upload({
       Bucket: bucketName,
       Key: keyName,
       Body: templateBody,
     }).promise();
     
-    const deployResult = await deployTemplate(template.Location, assumeYes)
+    const deployResult = await deployTemplate(template.Location, assumeYes).catch(e => console.error(e))
     
-    await s3
-      .deleteObject({
-        Bucket: bucketName,
-        Key: keyName,
-      })
-      .promise()
-      .catch(() => undefined)
-      .then(() => 
-        s3.deleteBucket({
-          Bucket: bucketName
-        })
-        .promise()
-      );
-
     return deployResult;
   }
   

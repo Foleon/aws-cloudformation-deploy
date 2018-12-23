@@ -28,7 +28,7 @@ const oraPromise = (message, promise) => {
         throw _;
     });
 };
-exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationProtection = true, policyBody, params }) => {
+exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationProtection = true, params }) => {
     const setTerminationProtection = () => __awaiter(this, void 0, void 0, function* () {
         yield oraPromise(`${enableTerminationProtection ? 'Enable' : 'Disable'} Termination Protection...`, lib_1.updateTerminationProtection({
             stackName,
@@ -122,27 +122,30 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
     });
     const start = ({ assumeYes } = {}) => __awaiter(this, void 0, void 0, function* () {
         AWS.config.update(new AWS.Config());
+        const s3 = new AWS.S3();
         const bucketName = uuid();
         const keyName = uuid();
-        const s3 = new AWS.S3();
-        s3.createBucket({
+        yield s3.createBucket({
             Bucket: bucketName
-        }).promise()
-            .then(() => s3.upload({
+        }).promise();
+        const template = yield s3.upload({
             Bucket: bucketName,
             Key: keyName,
             Body: templateBody,
-        }).promise())
-            .then(template => deployTemplate(template.Location, assumeYes))
-            .catch(() => undefined)
-            .then(() => s3.deleteObject({
+        }).promise();
+        const deployResult = yield deployTemplate(template.Location, assumeYes);
+        yield s3
+            .deleteObject({
             Bucket: bucketName,
             Key: keyName,
-        }).promise())
+        })
+            .promise()
             .catch(() => undefined)
             .then(() => s3.deleteBucket({
             Bucket: bucketName
-        }).promise());
+        })
+            .promise());
+        return deployResult;
     });
     return {
         start

@@ -1,4 +1,5 @@
-export declare const AwsCloudFormationDeploy: ({ stackName, templateBody, enableTerminationProtection, policyBody, params }: {
+import { CloudFormation } from 'aws-sdk';
+export declare const AwsCloudFormationDeploy: ({ stackName, templateBody, enableTerminationProtection, params }: {
     stackName: string;
     templateBody: string;
     enableTerminationProtection?: boolean;
@@ -9,5 +10,8 @@ export declare const AwsCloudFormationDeploy: ({ stackName, templateBody, enable
 }) => {
     start: ({ assumeYes }?: {
         assumeYes?: boolean;
-    }) => Promise<void>;
+    }) => Promise<{
+        outputs: CloudFormation.Output[];
+        succeed: boolean;
+    }>;
 };

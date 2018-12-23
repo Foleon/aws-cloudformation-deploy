@@ -48,7 +48,6 @@ export const AwsCloudFormationDeploy = ({
   stackName, 
   templateBody,
   enableTerminationProtection = true, 
-  policyBody, 
   params 
 }: DeployOptions) => {
   const setTerminationProtection = async () => {
@@ -178,28 +177,37 @@ export const AwsCloudFormationDeploy = ({
   const start = async ({ assumeYes }: { assumeYes?: boolean } = {}) => {
     AWS.config.update(new AWS.Config());
 
+    const s3 = new AWS.S3();
     const bucketName = uuid();
     const keyName = uuid();
 
-    const s3 = new AWS.S3();
-    s3.createBucket({
+    await s3.createBucket({
       Bucket: bucketName
-    }).promise()
-    .then(() => s3.upload({
+    }).promise();
+    
+    const template = await s3.upload({
       Bucket: bucketName,
       Key: keyName,
       Body: templateBody,
-    }).promise())
-    .then(template => deployTemplate(template.Location, assumeYes))
-    .catch(() => undefined)
-    .then(() => s3.deleteObject({
-      Bucket: bucketName,
-      Key: keyName,
-    }).promise())
-    .catch(() => undefined)
-    .then(() => s3.deleteBucket({
-      Bucket: bucketName
-    }).promise())
+    }).promise();
+    
+    const deployResult = await deployTemplate(template.Location, assumeYes)
+    
+    await s3
+      .deleteObject({
+        Bucket: bucketName,
+        Key: keyName,
+      })
+      .promise()
+      .catch(() => undefined)
+      .then(() => 
+        s3.deleteBucket({
+          Bucket: bucketName
+        })
+        .promise()
+      );
+
+    return deployResult;
   }
   
   return {

@@ -201,7 +201,7 @@ export const AwsCloudFormationDeploy = ({
       Body: templateBody,
     }).promise();
     
-    const deployResult = await deployTemplate(template.Location, assumeYes).catch(e => console.error(e))
+    const deployResult = await deployTemplate(template.Location, assumeYes);
     
     return deployResult;
   }

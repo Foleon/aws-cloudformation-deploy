@@ -142,7 +142,7 @@ exports.AwsCloudFormationDeploy = ({ stackName, templateBody, enableTerminationP
             Key: keyName,
             Body: templateBody,
         }).promise();
-        const deployResult = yield deployTemplate(template.Location, assumeYes).catch(e => console.error(e));
+        const deployResult = yield deployTemplate(template.Location, assumeYes);
         return deployResult;
     });
     return {

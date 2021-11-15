@@ -1,8 +1,10 @@
 import * as AWS from 'aws-sdk';
-export declare const executeChangeSet: ({ stackName, changeSetId, changeSetType }: {
-    stackName: string;
-    changeSetId: string;
-    changeSetType: string;
-}) => Promise<{
-    outputs: AWS.CloudFormation.Output[];
+declare type ExecuteOptions = {
+    stackName: AWS.CloudFormation.StackName;
+    changeSetId: AWS.CloudFormation.ChangeSetId;
+    changeSetType: AWS.CloudFormation.ChangeSetType;
+};
+export declare const executeChangeSet: ({ stackName, changeSetId, changeSetType }: ExecuteOptions) => Promise<{
+    outputs: AWS.CloudFormation.Outputs;
 }>;
+export {};

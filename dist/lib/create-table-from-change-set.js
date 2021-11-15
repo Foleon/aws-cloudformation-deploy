@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.createTableFromChangeSet = void 0;
 const Table = require('tty-table');
-exports.createTableFromChangeSet = (changeSet) => {
+const createTableFromChangeSet = (changeSet) => {
     const header = [
         { value: 'Type' },
         { value: 'ResourceType' },
@@ -21,3 +22,4 @@ exports.createTableFromChangeSet = (changeSet) => {
     }, []);
     return Table(header, rows).render();
 };
+exports.createTableFromChangeSet = createTableFromChangeSet;

@@ -1,13 +1,13 @@
 import * as AWS from 'aws-sdk';
-export declare const createChangeSet: ({ type, name, params }: {
-    type: string;
-    name: string;
+declare type CreateOptions = {
+    type: AWS.CloudFormation.ChangeSetType;
+    name: AWS.CloudFormation.ChangeSetName;
     params: {
-        StackName: string;
-        TemplateURL: string;
-        Parameters: AWS.CloudFormation.Parameter[];
-        Capabilities: string[];
+        StackName: AWS.CloudFormation.StackName;
+        TemplateURL: AWS.CloudFormation.TemplateURL;
+        Parameters: AWS.CloudFormation.Parameters;
+        Capabilities: AWS.CloudFormation.Capabilities;
     };
-}) => Promise<AWS.CloudFormation.DescribeChangeSetOutput & {
-    $response: AWS.Response<AWS.CloudFormation.DescribeChangeSetOutput, AWS.AWSError>;
-}>;
+};
+export declare const createChangeSet: ({ type, name, params }: CreateOptions) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.CloudFormation.DescribeChangeSetOutput, AWS.AWSError>>;
+export {};

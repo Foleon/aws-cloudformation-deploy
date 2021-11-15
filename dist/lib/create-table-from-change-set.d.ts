@@ -1,2 +1,4 @@
 import * as AWS from 'aws-sdk';
-export declare const createTableFromChangeSet: (changeSet: AWS.CloudFormation.DescribeChangeSetOutput) => string;
+declare type DescribeChangeSetOutput = AWS.CloudFormation.DescribeChangeSetOutput;
+export declare const createTableFromChangeSet: (changeSet: DescribeChangeSetOutput) => string;
+export {};
